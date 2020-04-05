@@ -1,0 +1,9 @@
+version: 1
+task_definition:
+  services:
+    reverse_proxy:
+      cpu_shares: 100
+      mem_limit: 524288000
+    test_nginx:
+      cpu_shares: 100
+      mem_limit: 524288000

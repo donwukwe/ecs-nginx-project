@@ -1,0 +1,64 @@
+name: AWS Deploy
+on:
+  push:
+
+jobs:
+  aws_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build the image
+        run: |
+          docker-compose --file docker-compose-local.yml build
+          docker image ls
+
+      - name: Run local test
+        run: |
+          docker-compose --file docker-compose-local.yml up -d
+          sleep 20
+          auth=$(curl -k -I --user ${{ secrets.NGINX_USER}}:${{ secrets.NGINX_PASSWORD}} https://localhost/uj47G/index.htm 2>/dev/null | head -n 1 | cut -d$' ' -f2)
+          if [[ $auth == '200' ]]
+          then
+            echo "Authentication succeeded" && exit 0
+          else
+            echo "Unable to access the site" && exit 1
+          fi
+
+      - name: Login to ECR
+        id: ecr
+        uses: jwalton/gh-ecr-login@v1
+        with:
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: us-east-2
+
+      - name: Push to ECR
+        run: |
+          docker tag ${{ github.event.repository.name }}_reverse_proxy:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/nginx/reverse_proxy:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/nginx/reverse_proxy:latest
+          docker tag ${{ github.event.repository.name }}_test_nginx:latest  ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/nginx/test_nginx:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/nginx/test_nginx:latest
+
+
+      - name: Install the ECS CLI
+        run: |
+          sudo curl -o /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
+          sudo chmod +x /usr/local/bin/ecs-cli
+          ecs-cli --version
+
+      - name: Deploy new image to ECS
+        run: |
+          ecs-cli configure --cluster test-cluster --default-launch-type EC2 --config-name test --region us-east-2
+          ecs-cli configure profile --access-key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile-name test
+          ecs-cli compose up --create-log-groups --cluster-config test --ecs-profile test --force-update
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}

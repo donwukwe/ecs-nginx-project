@@ -1,0 +1,13 @@
+version: '3'
+services:
+  reverse_proxy:
+    build:
+      context: ./reverse_proxy
+    container_name: reverse_proxy
+    ports:
+      - 80:80
+      - 443:443
+  test_nginx:
+    build:
+      context: ./nginx
+    container_name: test_nginx

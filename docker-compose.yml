@@ -1,0 +1,25 @@
+version: '3'
+services:
+  reverse_proxy:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/nginx/reverse_proxy
+    container_name: reverse_proxy
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - test_nginx
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: reverse-proxy
+        awslogs-region: us-east-2
+        awslogs-stream-prefix: proxy
+  test_nginx:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/nginx/test_nginx
+    container_name: test_nginx
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: nginx
+        awslogs-region: us-east-2
+        awslogs-stream-prefix: web_server
