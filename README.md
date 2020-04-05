@@ -1,7 +1,5 @@
 # ECS Web App Nginx Proxy
 
-## How does all of this work?
-
 This repo is for a web app to be available online. You can build this locally and test using localhost. The deployment
 process using github actions to build, test, and deploy to AWS. The github actions yaml file is located in 
 `.github/workflows` and will run when there is a git push.
