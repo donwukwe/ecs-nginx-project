@@ -1,6 +1,6 @@
 name: AWS Deploy
 on:
-  push:
+  push: 
 
 jobs:
   aws_deploy:
