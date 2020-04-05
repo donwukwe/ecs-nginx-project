@@ -1,6 +1,6 @@
 name: AWS Deploy
 on:
-  push: 
+  push:
 
 jobs:
   aws_deploy:
@@ -48,17 +48,6 @@ jobs:
           docker tag ${{ github.event.repository.name }}_test_nginx:latest  ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/nginx/test_nginx:latest
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/nginx/test_nginx:latest
 
-
-      - name: Install the ECS CLI
-        run: |
-          sudo curl -o /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
-          sudo chmod +x /usr/local/bin/ecs-cli
-          ecs-cli --version
-
       - name: Deploy new image to ECS
         run: |
-          ecs-cli configure --cluster test-cluster --default-launch-type EC2 --config-name test --region us-east-2
-          ecs-cli configure profile --access-key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile-name test
-          ecs-cli compose up --create-log-groups --cluster-config test --ecs-profile test --force-update
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          aws ecs --region us-east-2 update-service --cluster test-cluster --service ${{ github.event.repository.name }} --force-new-deployment
