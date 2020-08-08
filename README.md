@@ -19,4 +19,4 @@ Below is how you can run this locally. You will need to have `docker-compose` in
 There is a Makefile in this repo to make it easy to bring up the environment locally and bring it back down. The Makefile
  uses the local docker-compose yaml file instead of the main one since it does a build. The commands are: `make up` 
  `make down` `make nuke`. The`make nuke` brings down the containers and also removes the images. Then it
-brings the environment back up.
+brings the environment back up. 
