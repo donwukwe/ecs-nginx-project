@@ -50,4 +50,4 @@ jobs:
 
       - name: Deploy new image to ECS
         run: |
-          aws ecs --region us-east-2 update-service --cluster test-cluster --service ${{ github.event.repository.name }} --force-new-deployment
+          aws ecs --region us-east-2 update-service --cluster test-cluster --service ${{ github.event.repository.name }} --task-definition ecs-nginx-project --force-new-deployment
